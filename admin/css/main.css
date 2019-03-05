@@ -1,0 +1,162 @@
+body{
+	background-color: floralwhite;
+}
+.table-auto{
+	width: auto;
+   margin: 0 auto;
+}
+#add-product-btn{
+	margin-top: -35px;
+}
+#archives{
+   margin-top: -35px;
+}
+.active{
+	background-color: lime;
+}
+.color{
+  background-color: slategrey;
+}
+li
+{
+  list-style-type: none;
+  margin-top: 2px;
+  margin-right: 2px;
+  text-align: center;
+  float: center;
+  height: 50px;
+  width: auto;
+
+}
+ul>li:hover>ul
+{
+	text-decoration: none;
+	display: block;
+	background: magenta;
+}
+
+
+li a
+{
+	text-decoration: none;
+	background: lightgreen;
+	display: block;
+	color: black;
+	height: 40px;
+	width: 100px;
+	line-height: 40px;
+	transition: .5s;
+	border-radius: 8px 8px 8px 8px;
+	margin-right: 3px; 
+
+}
+.img-thumb
+{
+	height: 200px;
+}
+img.details{
+	width: 90%;
+	margin: 15px auto;
+}
+
+ul.Items,
+ul.Sub-Items
+{
+   position: relative;
+   display: none;
+}
+
+ul.Items
+{
+	right: 40px;
+}
+ul.Sub-Items
+{
+	left: 111px;
+	bottom: 50px;
+}
+ul>li:hover>a
+{
+	text-decoration: none;
+	display: block;
+	background: mistyrose;
+}
+
+#navbar > li
+{
+	margin-right: 1px;
+}
+
+ul.Items li
+{
+	border-top: 4px;
+}
+
+ul.Sub-Items
+{
+	border-left:
+}
+.table-auto
+{
+	width: auto;
+}
+
+.saved-image{
+	text-align: center;
+}
+
+.saved-image img
+{
+	width: auto;
+	height: 150px;
+}
+#login-form{
+	width: 50%;
+	height: 60%;
+	border: 2px solid #000;
+	border-radius: 15px;
+	box-shadow: 7px 7px 15px rgba(0,0,0,0.6);
+	margin: 6% auto;
+	padding: 15px;
+	background-color: white;
+}
+#add-product-btn{
+	margin-top: -35px; 
+}
+.products
+{
+	border: 1px solid grey;
+	background-color: snow;
+	border-radius: 5px;
+	box-shadow: 7px 7px 15px aqua;
+	padding: 16px;
+	margin-bottom: 20px;
+
+}
+.totals-table-header th{
+	text-align: center;
+}
+#cart_widget td{
+	font-size: 12px;
+}
+#recent_widget td{
+	font-size: 12px;
+}
+
+input.price-range{
+	width: 60px;
+}
+.sort{
+	font-size: 14px;
+}
+	@media screen and (max-width: 600px){
+	.trial a{
+		float: center;
+		width: 100%;
+		height: 40px;
+		padding-left: 15px;
+	}
+	.true{
+		display: block;
+	}
+	}

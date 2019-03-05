@@ -1,0 +1,95 @@
+body {
+  padding-bottom: 20px;
+}
+
+.navbar {
+  margin-bottom: 20px;
+}
+.brand{
+   display: none;
+}
+ .brand-types{
+ 	font-size: 25px;
+ 	text-decoration-color: blue;
+ }
+  @media (max-width: 480px){
+.brand{
+	display: block;
+  }
+ .brand-types{
+    font-size: 20px;
+ }
+ }
+ .products
+{
+
+	border-width: auto;
+	background-color: snow;
+	border-radius: 5px;
+	box-shadow: 5px 5px 15px aqua;
+	padding: 30px;
+	margin: 10px;
+
+}
+.image{
+	width: 50%;
+	height: auto;
+}
+.check{
+	margin: 5px;
+}
+.add-cart-images{
+	border-radius: 5px;
+	margin-left: 25%;
+	margin-right: 25%
+	width: 50%;
+	height: 300px;
+	box-shadow: aqua 0px 5px 5px 5px;
+}
+.title{
+	background-color: yellow;
+	margin-top: 10px;
+	margin-left: 20%;
+	margin-right: 20%;
+	border-radius: 5px;
+}
+ @media (max-width: 480px){
+ 	.add-cart-images{
+ 		margin: 0px;
+ 		width: 100%;
+ 	}
+ 	.title{
+	margin: 0px;
+}
+ }
+.border{
+	margin-top: 10px;
+	border: dashed;
+}
+.cancel-add{
+	background: crimson;
+	color: white;
+	text-align: center;
+	padding: 5px;
+	text-decoration: none;
+	display: block;
+	border-radius: 2px;
+	font-size: 20px;
+	margin: 0 5px 15px 5px;
+	margin: 10px;
+	width: 90%;
+	height: 40px;
+	margin-left: 10%
+}
+a.cancel-add:hover{
+  transition: 0.3s;
+  color: white;
+  text-decoration: none;
+  background: red;
+  width: 60%;
+}
+ @media (max-width: 480px){
+   .cancel-add{
+   	display: none;
+   }
+ }

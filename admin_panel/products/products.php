@@ -1,0 +1,347 @@
+
+<?php
+  require_once $_SERVER['DOCUMENT_ROOT'].'/boutique/init.php';
+  include '../../accessories/heading/head.php';
+  include '../head/navigation.php';
+
+  if (!logged_in_admin()) {
+     login_redirect('login.php');
+   }
+   if (isset($_GET['branch'])) {//obtained from navigation bar to show branch id
+
+   $branch = sanitize((int)$_GET['branch']);
+   $branchQ = $db->query("SELECT * FROM accesoriestype WHERE branch = 0 AND id = '$branch'");
+   $branchTitle = mysqli_fetch_assoc($branchQ);
+   $parentQ = $db->query("SELECT * FROM accesoriestype WHERE parent = 0 AND branch = '$branch'");
+  if (isset($_GET['delete'])) {
+	$id = (int)$_GET['id'];
+    
+    $db->query("UPDATE accesories SET deleted = 1 WHERE id = '{$id}'") or die(mysqli_error($db));
+}
+
+//adding a product to the website using featured button
+if (isset($_GET['featured'])) {
+  $id = (int)$_GET['id'];
+  $featured = (int)$_GET['featured'];
+  $sql = $db->query("SELECT * FROM accesories WHERE id = '$id'");
+  $items = mysqli_fetch_assoc($sql);
+  //check if the goods are enough in stock before featuring it
+  if ($items['available'] == 0) {
+    $_SESSION['error_flash']='Their are 0 '.$items['title'].' available. Restock first before featuring';
+  }else{
+  $db->query("UPDATE accesories SET featured = '$featured' WHERE id ='{$id}'") or die(mysqli_error($db));
+    }
+    header('location:products.php?branch='.$branch);
+}
+
+if(isset($_GET['add']) || isset($_GET['edit'])){
+//initialization of the values to be entered in the database
+	$title = ((isset($_POST['title']) && $_POST['title'] != '')?sanitize($_POST['title']):'');
+	$price = ((isset($_POST['price']) && $_POST['price'] != '')?sanitize($_POST['price']):'');
+  $list_price = ((isset($_POST['list_price']) && $_POST['list_price'] != '')?
+    sanitize($_POST['list_price']):'');
+  $available = ((isset($_POST['available']) && $_POST['available'] != '')?
+    sanitize($_POST['available']):'');
+	$description = ((isset($_POST['description']) && $_POST['description'] != '')?
+    sanitize($_POST['description']):'');
+	$category = ((isset($_POST['category']) && $_POST['category'] != '')?
+    sanitize($_POST['category']):'');
+  $threshold = ((isset($_POST['threshold']) && $_POST['threshold'] != '')?
+    sanitize($_POST['threshold']): '');
+  $brandType = ((isset($_POST['brand']) && $_POST['brand'] != '')?sanitize($_POST['brand']) :'');
+  $parentQ = $db->query("SELECT * FROM accesoriestype WHERE parent = 0 AND branch = '$branch'");
+  $saved_image = '';
+
+   if (isset($_GET['edit'])) {
+    $edit_id = sanitize($_GET['id']);
+    $products = $db->query("SELECT * FROM accesories WHERE id = '{$edit_id}'");
+    $product = mysqli_fetch_assoc($products);
+
+     if (isset($_GET['delete_img'])) {
+      $imgi = (int)$_GET['imgi'] - 1;
+      $images = explode(',', $product['image']);
+      $img_url = $_SERVER['DOCUMENT_ROOT'].$product['image'].$images[$imgi];
+     // unlink($img_url);
+      unset($images[$imgi]);
+      $imageString = implode(',', $images);
+      $db->query("UPDATE accesories SET image = '{$imageString}' WHERE id = '$edit_id'");
+ //     var_dump($imageString);
+      header('location: products.php?branch='.$branch.'&edit&id='.$edit_id);
+
+    }
+
+   	$title = ((isset($_POST['title']) && $_POST['title'] != '')?sanitize($_POST['title']):$product['title']);
+   	$price = ((isset($_POST['price']) && $_POST['price'] != '')?
+      sanitize($_POST['price']):$product['price']);
+    $list_price = ((isset($_POST['list_price']) && $_POST['price'] != '')?
+      sanitize($_POST['list_price']):$product['list_price']);
+    $available = ((isset($_POST['available']) && $_POST['available'] != '')?
+      sanitize($_POST['available']):$product['available']);
+    $threshold = ((isset($_POST['threshold']) && $_POST['threshold'] != '')?
+      sanitize($_POST['threshold']):$product['threshold']);
+   	$description = ((isset($_POST['description']) && $_POST['description'] != '')?
+      sanitize($_POST['description']):$product['description']);
+   	$category = ((isset($_POST['category']) && $_POST['category'] != '')?
+      sanitize($_POST['category']):$product['category']);
+   	 $brand_id = $product['brand_type'];
+   	 $brandQ = $db->query("SELECT * FROM accesoriestype WHERE id = '{$brand_id}'");
+   	 $result = mysqli_fetch_assoc($brandQ);
+   	$brandType = ((isset($_POST['brand']) && $_POST['brand'] != '')?
+      sanitize($_POST['brand']) : $product['brand_type']);
+   	$saved_image = (($product['image'] != '')?$product['image']:'');
+   	$dbPath = $saved_image;
+   }
+
+  if ($_POST) {
+  //	 var_dump($_FILES['photo']);
+  	 $errors = [];
+   
+     $required = array(
+      'title'    => 'Title',
+      'price'    => 'Price',
+      'list_price' => 'List Price',
+      'category' => 'Category',
+      'available'=> 'Available',
+      'threshold' => 'Threshold'
+     );
+     $allowed = array('jpg','png','jpeg','gif');
+
+     foreach ($required as $field => $d) {
+     	if ($_POST[$field] == '') {
+     	   $errors[] = 'Please fill out the '.$d.' field';
+     	}
+     }
+     $nameArray = [];
+     $tmpLoc = [];
+     $uploadPath = [];
+     $dbPath = '';
+    if($saved_image == '' && $_FILES['photo']['name'] != ''){
+      $photo_count = count($_FILES['photo']['name']);
+      for ($i = 0; $i < $photo_count ; $i++) {
+        $name = $_FILES['photo']['name'][$i];
+  	    $nameArray = explode('.', $name);
+  	    $file_name = $nameArray[0];
+  	    $file_ext = $nameArray[1];
+  	    $type = $_FILES['photo']['type'][$i];
+  	    $mime = explode('/', $type);
+  	    $mimeType = $mime[0];
+  	    $mimeExt = $mime[1];
+  	    $tmpLoc[] = $_FILES['photo']['tmp_name'][$i];
+  	    $fileSize = $_FILES['photo']['size'][$i];
+  	    $uploadName = md5(microtime()).'.'.$file_ext;
+  	    $uploadPath[] = BASEURL.'images/products/'.$uploadName;
+        if ($i != 0) {
+          $dbPath .= ',';
+        }
+  	    $dbPath .= '/boutique/images/products/'.$uploadName;
+
+  	  //filtering errors out
+  	  if ($mimeType != 'image') {
+  	  	$errors[] = 'File must be an image';
+  	   }
+  	  if (!in_array($file_ext, $allowed)) {
+  	   $errors[] = 'The file must be a png,jpeg,jpg or a gif';
+  	   }
+  	  if ($fileSize > 1500000) {
+  	  	$errors[] = 'Only files bellow 15MB is allowed';
+  	     }
+       }
+  	 }
+
+  	 if (!empty($errors)) {
+  	 	echo display_errors($errors);
+  	 }else{
+        if ($photo_count > 0) {
+        //move file to the specified folder
+          for ($i=0; $i < $photo_count; $i++) { 
+              move_uploaded_file($tmpLoc[$i], $uploadPath[$i]); 
+          }
+        }
+  	 	//insert accessory into database
+      $sql = ("
+        INSERT INTO  
+        accesories (title,branch,price,list_price,category,brand_type,image,available,threshold,description)
+        VALUES ('$title','$branch','$price','$list_price','$category','$brandType','$dbPath','$available','$threshold','$description')");
+        $_SESSION['success_flash'] = 'One product added to stock successfully';
+
+  	 	if (isset($_GET['edit'])) {
+  	 	 $sql = ("
+          UPDATE `accesories` SET `title`='$title',`category`='$category',`brand_type`='$brandType',`price`='$price',`list_price`='$list_price',`image`='$dbPath',`available` = $available,`threshold` = '$threshold',`description`='$description'
+          WHERE id= '$edit_id'
+  	 	   ");
+       $_SESSION['success_flash'] = 'Product details updated';
+  	 	}
+        $db->query($sql) or die(mysqli_error($db));
+        header('location:products.php?branch='.$branch);
+  	 }
+
+  }
+  
+?>
+  <div class="row">
+  	<div class="col-md-1"></div>
+  	<div class="col-md-10">
+  		<h2 class="text-center">ADD <?=strtoupper($branchTitle['brand_name']); ?> PRODUCTS</h2>
+  		<form action="products.php?branch=<?=$branch;?>&<?=((isset($_GET['edit']))?'edit&id='.$edit_id:'add=1')?>" method="POST" enctype="multipart/form-data">
+  			<div class="row">
+  				<div class="col-md-3">
+  					<label for="title">Title:</label>
+  					<input type="text" id="title" name="title" class="form-control" value="<?=$title;?>">
+  				</div>
+  				<div class="col-md-2">
+  					<label for="price">Price:</label>
+  					<input type="text" id="price" name="price" class="form-control" value="<?=$price;?>">
+  				</div>
+          <div class="col-md-2">
+            <label for="list_price">List Price:</label>
+            <input type="text" id="list_price" name="list_price" class="form-control" value="<?=$list_price;?>">
+          </div>
+  				<div class="col-md-3">
+  				<label for="category">Category:</label>
+  				<select class="form-control" id="category" name="category">
+  					<option value=""<?=(($category == '')?' selected':'')?>></option>
+  					<?php while($result = mysqli_fetch_assoc($parentQ)):?>
+  					<option value="<?=$result['id'];?>"<?=(($category == $result['id'])?' selected':'')?>><?=$result['brand_name'];?></option>
+  				    <?php endwhile;?>
+  				</select>
+  				</div>
+  				<div class="col-md-2">
+  					<label for="brand">Brand:</label>
+  					<select id="brand" name="brand" class="form-control"></select>
+  				</div>
+  		</div>
+  			<div class="row" style="margin-top: 30px;">
+          <div class="col-md-6">
+            <label for="description">Description:</label>
+            <textarea type="text" id="description" name="description" class="form-control" rows="4"><?=$description;?></textarea>
+          </div>
+          <div class="col-md-3">
+            <label for="available">Available:</label>
+            <input type="number" id="available" name="available" class="form-control" min="1"
+             value="<?=$available;?>">
+          </div>
+          <div class="col-md-3">
+            <label for="threshold">Threshold:</label>
+            <input type="text" name="threshold" class="form-control" value="<?=$threshold?>">
+          </div>
+        </div>
+  			   <div class="row">
+            <div class="col-md-6">
+                  <!-- start -->
+        <?php if($saved_image != ''): $imgi = 1; ?>
+        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <?php 
+            $photos = explode(',', $saved_image); ?>
+                <img class="first-slide" src="<?=$photos[0];?>" alt="First slide">
+          </div>
+          <?php  
+            
+            $photos = explode(',', $saved_image);
+              foreach($photos as $photo): ?>
+            <div class="carousel-item">
+              <img class="product" src="<?=$photo;?>" alt="Second slide">
+            </div>
+            <div class="container">
+              <div class="carousel-caption">
+                <a href="products.php?branch=<?=$branch;?>&delete_img=1&edit&id=<?=$edit_id;?>&imgi=<?=$imgi;?>" class="text-danger">Delete image</a>
+              </div>
+            </div>
+            <?php $imgi++; endforeach; ?>
+          </div>
+          <a class="carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+      </div>
+    <!-- end -->
+        <?php else: ?>
+          <label for="photo">Image:</label>
+          <input type="file" name="photo[]" id="photo" class="form-control" multiple>
+           </div>
+            <div class="col-md-6">
+  			   	<button  type="submit" class="btn btn-xs btn-primary pull-right"><?=((isset($_GET['edit']))?'Edit':'Add');?></button>
+  			   	<a href="products.php?branch=<?=$branch;?>" style="margin-right: 15px;" class="btn btn-xs btn-warning pull-right">Cancel</a>
+           </div>
+         <?php endif; ?>
+  			
+  		</form>
+
+  	</div>
+  	<div class="col-md-1"></div>
+  </div>
+<?php }else{
+ $productQ = $db->query("SELECT * FROM accesories WHERE deleted = 0 AND branch = '$branch'");
+  $i = 1;
+?>
+<h1 class="text-center"><?=strtoupper($branchTitle['brand_name']); ?></h1>
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-10">
+<table class="table table-condensed table-striped table-bordered">
+	<thead>
+		<th>#</th>
+		<th>Title</th>
+		<th>Price</th>
+    <th>List Price</th>
+		<th>Category</th>
+		<th>Featured</th>
+		<th>Sold</th>
+		<th></th>
+	</thead>
+	<tbody>
+		<tr>
+		<?php while($result = mysqli_fetch_assoc($productQ)):?>
+		<td><?=$i;?></td>
+		<td><?=$result['title'];?></td>
+		<td><?=$result['price'];?></td>
+    <td><?=$result['list_price'];?></td>
+		<td></td>
+		<td width="200px">
+			<a href="products.php?branch=<?=$branch;?>&featured=<?=(($result['featured']==0)?'1':'0'); ?>&id=<?=$result['id'];?>" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-<?=(($result['featured'] == 1)?'minus':'plus');?>"></span></a>
+    	&nbsp <?=(($result['featured']==1)?'Featured Product':'');?>
+       </td>
+		<td><?=$result['sold']?></td>
+		<td style="width: 150px;">
+            <a href="products.php?branch=<?=$branch;?>&delete&id=<?=$result['id'];?>" class="btn btn-xs pull-right"><span class="glyphicon glyphicon-remove"></span></a>
+		    <a href="products.php?branch=<?=$branch;?>&edit&id=<?=$result['id'];?>" class="btn btn-xs pull-right"><span class="glyphicon glyphicon-pencil"></span></a>
+		</td>
+		</tr>
+		<?php $i++;?>
+		<?php endwhile;?>	
+	</tbody>
+ </table>
+   	  <a class="btn btn-xs btn-primary pull-right" href="products.php?branch=<?=$branch;?>&add=1">
+        Add <?=$branchTitle['brand_name'];?></a>
+   </div>
+   <div class="col-md-1"></div>
+</div>
+<div class="container-fluid">
+<div class="row">
+	<div class="col-md-1"></div>
+	<div class="col-md-5">
+		<?php include 'additions/brands_available.php'; ?>
+     </div>
+	<div class="col-md-5">
+		<?php include 'additions/brand_category.php';?>
+	</div>
+	<div class="col-md-1"></div>
+</div>
+</div>
+
+
+<?php }
+  include '../head/footer.php';
+?>
+<script>
+	jQuery('document').ready(function(){
+    get_clothe_type('<?=$brandType; ?>');
+  });
+</script>
+
+<?php } else{ header('location:../index.php'); } ?>
